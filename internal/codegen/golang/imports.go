@@ -392,8 +392,6 @@ func (i *importer) queryImports(filename string) fileImports {
 
 	if anyNonCopyFrom {
 		std["context"] = struct{}{}
-		std["go.opentelemetry.io/otel"] = struct{}{}
-		std["go.opentelemetry.io/otel/codes"] = struct{}{}
 	}
 
 	sqlpkg := parseDriver(i.Options.SqlPackage)
@@ -403,6 +401,9 @@ func (i *importer) queryImports(filename string) fileImports {
 	if sliceScan() && !sqlpkg.IsPGX() {
 		pkg[ImportSpec{Path: "github.com/lib/pq"}] = struct{}{}
 	}
+
+	pkg[ImportSpec{Path: "go.opentelemetry.io/otel"}] = struct{}{}
+	pkg[ImportSpec{Path: "go.opentelemetry.io/otel/codes"}] = struct{}{}
 
 	return sortedImports(std, pkg)
 }
