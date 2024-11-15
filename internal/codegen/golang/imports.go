@@ -392,6 +392,8 @@ func (i *importer) queryImports(filename string) fileImports {
 
 	if anyNonCopyFrom {
 		std["context"] = struct{}{}
+		std["go.opentelemetry.io/otel"] = struct{}{}
+		std["go.opentelemetry.io/otel/codes"] = struct{}{}
 	}
 
 	sqlpkg := parseDriver(i.Options.SqlPackage)

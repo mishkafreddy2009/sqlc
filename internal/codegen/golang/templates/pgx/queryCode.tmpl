@@ -27,16 +27,22 @@ type {{.Ret.Type}} struct { {{- range .Ret.Struct.Fields}}
 {{range .Comments}}//{{.}}
 {{end -}}
 {{- if $.EmitMethodsWithDBArgument -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, db DBTX, {{.Arg.Pair}}) ({{.Ret.DefineType}}, error) {
+func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, db DBTX, {{.Arg.Pair}}) ({{.Ret.DefineType}}, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
 	row := db.QueryRow(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- else -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) ({{.Ret.DefineType}}, error) {
+func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, {{.Arg.Pair}}) ({{.Ret.DefineType}}, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
 	row := q.db.QueryRow(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- end}}
 	{{- if or (ne .Arg.Pair .Ret.Pair) (ne .Arg.DefineType .Ret.DefineType) }}
 	var {{.Ret.Name}} {{.Ret.Type}}
 	{{- end}}
 	err := row.Scan({{.Ret.Scan}})
+	if err != nil {
+		databaseSpan.SetStatus(codes.Error, err.Error())
+	}
+	databaseSpan.End()
 	return {{.Ret.ReturnName}}, err
 }
 {{end}}
@@ -45,13 +51,16 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) ({{.Ret.De
 {{range .Comments}}//{{.}}
 {{end -}}
 {{- if $.EmitMethodsWithDBArgument -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, db DBTX, {{.Arg.Pair}}) ([]{{.Ret.DefineType}}, error) {
+func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, db DBTX, {{.Arg.Pair}}) ([]{{.Ret.DefineType}}, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
 	rows, err := db.Query(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- else -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) ([]{{.Ret.DefineType}}, error) {
+func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, {{.Arg.Pair}}) ([]{{.Ret.DefineType}}, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
 	rows, err := q.db.Query(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- end}}
 	if err != nil {
+		databaseSpan.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 	defer rows.Close()
@@ -63,13 +72,16 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) ([]{{.Ret.
 	for rows.Next() {
 		var {{.Ret.Name}} {{.Ret.Type}}
 		if err := rows.Scan({{.Ret.Scan}}); err != nil {
+			databaseSpan.SetStatus(codes.Error, err.Error())
 			return nil, err
 		}
 		items = append(items, {{.Ret.ReturnName}})
 	}
 	if err := rows.Err(); err != nil {
+		databaseSpan.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
+	databaseSpan.End()
 	return items, nil
 }
 {{end}}
@@ -78,12 +90,18 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) ([]{{.Ret.
 {{range .Comments}}//{{.}}
 {{end -}}
 {{- if $.EmitMethodsWithDBArgument -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, db DBTX, {{.Arg.Pair}}) error {
+func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, db DBTX, {{.Arg.Pair}}) error {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
 	_, err := db.Exec(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- else -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) error {
+func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, {{.Arg.Pair}}) error {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
 	_, err := q.db.Exec(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- end}}
+	if err != nil {
+		databaseSpan.SetStatus(codes.Error, err.Error())
+	}
+	databaseSpan.End()
 	return err
 }
 {{end}}
@@ -92,15 +110,19 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) error {
 {{range .Comments}}//{{.}}
 {{end -}}
 {{if $.EmitMethodsWithDBArgument -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, db DBTX, {{.Arg.Pair}}) (int64, error) {
+func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, db DBTX, {{.Arg.Pair}}) (int64, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
 	result, err := db.Exec(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- else -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) (int64, error) {
+func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, {{.Arg.Pair}}) (int64, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
 	result, err := q.db.Exec(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- end}}
 	if err != nil {
+		databaseSpan.SetStatus(codes.Error, err.Error())
 		return 0, err
 	}
+	databaseSpan.End()
 	return result.RowsAffected(), nil
 }
 {{end}}
