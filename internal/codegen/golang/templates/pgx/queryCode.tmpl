@@ -27,12 +27,12 @@ type {{.Ret.Type}} struct { {{- range .Ret.Struct.Fields}}
 {{range .Comments}}//{{.}}
 {{end -}}
 {{- if $.EmitMethodsWithDBArgument -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, db DBTX, {{.Arg.Pair}}) ({{.Ret.DefineType}}, error) {
-	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
+func (q *Queries) {{.MethodName}}(ctx context.Context, db DBTX, {{.Arg.Pair}}) ({{.Ret.DefineType}}, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(ctx, "database.query.{{.MethodName}}")
 	row := db.QueryRow(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- else -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, {{.Arg.Pair}}) ({{.Ret.DefineType}}, error) {
-	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
+func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) ({{.Ret.DefineType}}, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(ctx, "database.query.{{.MethodName}}")
 	row := q.db.QueryRow(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- end}}
 	{{- if or (ne .Arg.Pair .Ret.Pair) (ne .Arg.DefineType .Ret.DefineType) }}
@@ -51,12 +51,12 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, 
 {{range .Comments}}//{{.}}
 {{end -}}
 {{- if $.EmitMethodsWithDBArgument -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, db DBTX, {{.Arg.Pair}}) ([]{{.Ret.DefineType}}, error) {
-	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
+func (q *Queries) {{.MethodName}}(ctx context.Context, db DBTX, {{.Arg.Pair}}) ([]{{.Ret.DefineType}}, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(ctx, "database.query.{{.MethodName}}")
 	rows, err := db.Query(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- else -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, {{.Arg.Pair}}) ([]{{.Ret.DefineType}}, error) {
-	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
+func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) ([]{{.Ret.DefineType}}, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(ctx, "database.query.{{.MethodName}}")
 	rows, err := q.db.Query(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- end}}
 	if err != nil {
@@ -90,12 +90,12 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, 
 {{range .Comments}}//{{.}}
 {{end -}}
 {{- if $.EmitMethodsWithDBArgument -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, db DBTX, {{.Arg.Pair}}) error {
-	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
+func (q *Queries) {{.MethodName}}(ctx context.Context, db DBTX, {{.Arg.Pair}}) error {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(ctx, "database.query.{{.MethodName}}")
 	_, err := db.Exec(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- else -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, {{.Arg.Pair}}) error {
-	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
+func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) error {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(ctx, "database.query.{{.MethodName}}")
 	_, err := q.db.Exec(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- end}}
 	if err != nil {
@@ -110,12 +110,12 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, 
 {{range .Comments}}//{{.}}
 {{end -}}
 {{if $.EmitMethodsWithDBArgument -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, db DBTX, {{.Arg.Pair}}) (int64, error) {
-	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
+func (q *Queries) {{.MethodName}}(ctx context.Context, db DBTX, {{.Arg.Pair}}) (int64, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(ctx, "database.query.{{.MethodName}}")
 	result, err := db.Exec(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- else -}}
-func (q *Queries) {{.MethodName}}(ctx context.Context, spanCtx context.Context, {{.Arg.Pair}}) (int64, error) {
-	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(spanCtx, "database.query.{{.MethodName}}")
+func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}}) (int64, error) {
+	_, databaseSpan := otel.Tracer("{{.MethodName}}").Start(ctx, "database.query.{{.MethodName}}")
 	result, err := q.db.Exec(ctx, {{.ConstantName}}, {{.Arg.Params}})
 {{- end}}
 	if err != nil {
